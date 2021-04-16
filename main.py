@@ -1,6 +1,7 @@
 import os
 import pprint
 import pandas as pd
+import matplotlib.pyplot as plt
 import xlrd
 
 book = xlrd.open_workbook('Accenture_Датасет.xlsx')
@@ -14,6 +15,7 @@ for thing, kg, buy, sell in zip(df1["Код товара"], df1["Продажи 
         things[thing][1] += kg      # кг
         things[thing][2] += buy     # цена покупки
         things[thing][3] += sell    # цена продажи
+
 for i in things.items():
     a = str()
     for j in range(len(i[1])):
@@ -27,3 +29,23 @@ for i in things.items():
             a += " цена продажи " + str(i[1][j])
     print(a)
     print()
+statik = {}
+for date, count in zip(df1["Дата"][:3857], df1["Продажи в кг"][:3857]):
+    if date not in statik:
+        statik[date] = count
+    else:
+        statik[date] += count
+
+plt.style.use('dark_background')  # чёерный фон
+plt.plot(statik.keys(), statik.values())
+plt.show()
+
+for date, count in zip(df1["Дата"][3857:], df1["Продажи в кг"][3857:]):
+    if date not in statik:
+        statik[date] = count
+    else:
+        statik[date] += count
+
+plt.style.use('dark_background')  # чёерный фон
+plt.plot(statik.keys(), statik.values())
+plt.show()
