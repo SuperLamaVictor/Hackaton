@@ -18,6 +18,17 @@ for thing, kg, buy, sell in zip(df1["Код товара"][:3857], df1["Прод
         things[thing][2] += buy     # цена покупки
         things[thing][3] += sell    # цена продажи
 
+agents_f = {}
+
+for agent, price, buy, kg in zip(df1["Агент"][:3857], df1["Сумма в ценах закупки"][:3857], df1["Сумма в ценах продажи"][:3857], df1["Продажи в кг"][:3857]):
+    if agent not in agents_f:
+        agents_f[agent] = [price, buy, kg]
+    else:
+        agents_f[agent][0] += price  # ценв покупки
+        agents_f[agent][1] += buy    # цена продажи
+        agents_f[agent][2] += kg     # кг
+print(agents_f)
+
 for i in things.items():
     a = str()
     for j in range(len(i[1])):
@@ -42,6 +53,33 @@ for thing, kg, buy, sell in zip(df1["Код товара"][3857:], df1["Прод
         things_2[thing][1] += kg      # кг
         things_2[thing][2] += buy     # цена покупки
         things_2[thing][3] += sell    # цена продажи
+
+agents_s = {}
+
+for agent, price, buy, kg in zip(df1["Агент"][:3857], df1["Сумма в ценах закупки"][:3857], df1["Сумма в ценах продажи"][:3857], df1["Продажи в кг"][:3857]):
+    if agent not in agents_s:
+        agents_s[agent] = [price, buy, kg]
+    else:
+        agents_s[agent][0] += price  # ценв покупки
+        agents_s[agent][1] += buy    # цена продажи
+        agents_s[agent][2] += kg     # kg
+
+all_buy = 0
+for price in df1["Сумма в ценах закупки"][:3857]:
+    all_buy += float(price)
+all_sell = 0
+for price in df1["Сумма в ценах продажи"][:3857]:
+    all_sell += float(price)
+print(all_buy, all_sell)
+
+for i in range(len(list(agents_f.items()))):
+    print("2015 - 2016\tЧистая прибыль за кг от " + list(agents_s.items())[i][0].upper() + "\t\t" + str(int((list(agents_s.items())[i][1][1] - list(agents_s.items())[i][1][0]) / list(agents_s.items())[i][1][2])))
+    print("\t\tЗакупка агента:\t\t" + str(int(list(agents_s.items())[i][1][0])) + "\tот общего V\t\t" + str(round(list(agents_s.items())[i][1][0] / all_buy * 100, 2)) + '%')
+    print("\t\tПрибыль агента:\t\t" + str(int(list(agents_s.items())[i][1][1])) + "\tот общего V\t\t" + str(round(list(agents_s.items())[i][1][1] / all_sell * 100, 2)) + '%')
+    dohod = int((list(agents_s.items())[i][1][1] - list(agents_s.items())[i][1][0]))
+    print("\t\tЧистый доход:\t\t" + str(dohod) + "\tот общего V\t\t" + str(round(dohod / (all_sell - all_buy) * 100, 2)) + '%')
+    print()
+
 
 for i in things_2.items():
     a = str()
