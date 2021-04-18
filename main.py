@@ -126,6 +126,9 @@ for i in range(len(list(agents_f.items()))):
 a = '\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n'
 paragraph = doc.add_paragraph(a)
 paragraph.style = doc.styles['Normal']
+a = '\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n'
+paragraph = doc.add_paragraph(a)
+paragraph.style = doc.styles['Normal']
 
 doc.add_heading("Отчёт об агентах за 2016 (1 и 2 месяц)", 0)
 for i in range(len(list(agents_s.items()))):
