@@ -1,15 +1,19 @@
 import os
 import xlrd
-import pprint
 import xlsxwriter
 import pandas as pd
-import matplotlib.pyplot as plt
+from docx import Document
+
+doc = Document()
+style = doc.styles['Normal']
+font = style.font
+font.name = 'Arial'
 
 book = xlrd.open_workbook('Accenture_Датасет.xlsx')
 df1 = pd.read_excel(os.path.join('Accenture_Датасет.xlsx'), engine='openpyxl')
 things = {}
 
-for thing, kg, buy, sell in zip(df1["Код товара"][:3857], df1["Продажи в кг"][:3857], df1["Сумма в ценах закупки"][:3857], df1["Сумма в ценах продажи"][:3857]):
+for thing, kg, buy, sell in zip(df1["Код товара"][:2470], df1["Продажи в кг"][:2470], df1["Сумма в ценах закупки"][:2470], df1["Сумма в ценах продажи"][:2470]):
     if thing not in things:
         things[thing] = [1, kg, buy, sell]
     else:
@@ -27,22 +31,26 @@ for agent, price, buy, kg in zip(df1["Агент"][:3857], df1["Сумма в ц
         agents_f[agent][0] += price  # ценв покупки
         agents_f[agent][1] += buy    # цена продажи
         agents_f[agent][2] += kg     # кг
-print(agents_f)
 
+doc.add_heading("Отчёт за 2015 - 2016 (1 и 2 месяц)", 0)
 for i in things.items():
-    a = str()
-    for j in range(len(i[1])):
-        if j == 0:
-            a += "количество " + str(i[1][j])
-        elif j == 1:
-            a += "; кг " + str(i[1][j])
-        elif j == 2:
-            a += "; сумма покупок " + str(int(i[1][j]))
-        elif j == 3:
-            a += "; суииа продаж " + str(int(i[1][j]))
-            a += "; чистая прибль товара " + str(int(i[1][j] - i[1][j - 1]))
-    print(a)
-print()
+    doc.add_heading("Товар с маркеровкой\t" + str(i[0]), 1)
+    doc.add_paragraph(f"Количество проданных единиц \t\t{i[1][0]}", style='List Bullet')
+    doc.add_paragraph(f"Количество проданных киллограм \t\t{i[1][1]}", style='List Bullet')
+    doc.add_paragraph(f"Общая сумма закупки \t\t\t\t{int(i[1][2])}", style='List Bullet')
+    doc.add_paragraph(f"Общая сумма продаж \t\t\t\t{int(i[1][3])}", style='List Bullet')
+    doc.add_paragraph(f"Чистая прибыль товара \t\t\t\t{int(i[1][3] - i[1][2])}", style='List Bullet')
+doc.add_heading("Всего\t", 1)
+doc.add_paragraph(f"Количество проданных единиц \t\t{int(list(things.items())[0][1][0] + list(things.items())[1][1][0] + list(things.items())[2][1][0])}", style='List Bullet')
+doc.add_paragraph(f"Количество проданных киллограм \t\t{int(list(things.items())[0][1][1] + list(things.items())[1][1][1] + list(things.items())[2][1][1])}", style='List Bullet')
+ras = int(list(things.items())[0][1][2] + list(things.items())[1][1][2] + list(things.items())[2][1][2])
+sell = int(list(things.items())[0][1][3] + list(things.items())[1][1][3] + list(things.items())[2][1][3])
+doc.add_paragraph(f"Общая сумма закупки \t\t\t\t{ras}", style='List Bullet')
+doc.add_paragraph(f"Общая сумма продаж \t\t\t\t{sell}", style='List Bullet')
+doc.add_paragraph(f"Чистая прибыль \t\t\t\t\t{sell - ras}", style='List Bullet')
+a = '\n\n\n\n\n\n\n'
+paragraph = doc.add_paragraph(a)
+paragraph.style = doc.styles['Normal']
 things_2 = {}
 
 for thing, kg, buy, sell in zip(df1["Код товара"][3857:], df1["Продажи в кг"][3857:], df1["Сумма в ценах закупки"][3857:], df1["Сумма в ценах продажи"][3857:]):
@@ -54,9 +62,36 @@ for thing, kg, buy, sell in zip(df1["Код товара"][3857:], df1["Прод
         things_2[thing][2] += buy     # цена покупки
         things_2[thing][3] += sell    # цена продажи
 
+doc.add_heading("Отчёт за 2016 - 2017 (1 и 2 месяц)", 0)
+sr_key = sorted(things, key=things.get)
+sort_1, sort_2 = things, things_2
+things, things_2 = {}, {}
+for w in sr_key:
+    things[w] = sort_1[w]
+    things_2[w] = sort_2[w]
+
+for i in things_2.items():
+    doc.add_heading("Товар с маркеровкой\t" + str(i[0]), 1)
+    doc.add_paragraph(f"Количество проданных единиц \t\t{i[1][0]}", style='List Bullet')
+    doc.add_paragraph(f"Количество проданных киллограм \t\t{i[1][1]}", style='List Bullet')
+    doc.add_paragraph(f"Общая сумма закупки \t\t\t\t{int(i[1][2])}", style='List Bullet')
+    doc.add_paragraph(f"Общая сумма продаж \t\t\t\t{int(i[1][3])}", style='List Bullet')
+    doc.add_paragraph(f"Чистая прибыль товара \t\t\t\t{int(i[1][3] - i[1][2])}", style='List Bullet')
+doc.add_heading("Всего\t", 1)
+doc.add_paragraph(f"Количество проданных единиц \t\t{int(list(things_2.items())[0][1][0] + list(things_2.items())[1][1][0] + list(things_2.items())[2][1][0])}", style='List Bullet')
+doc.add_paragraph(f"Количество проданных киллограм \t\t{int(list(things_2.items())[0][1][1] + list(things_2.items())[1][1][1] + list(things_2.items())[2][1][1])}", style='List Bullet')
+ras = int(list(things_2.items())[0][1][2] + list(things_2.items())[1][1][2] + list(things_2.items())[2][1][2])
+sell = int(list(things_2.items())[0][1][3] + list(things_2.items())[1][1][3] + list(things_2.items())[2][1][3])
+doc.add_paragraph(f"Общая сумма закупки \t\t\t\t{ras}", style='List Bullet')
+doc.add_paragraph(f"Общая сумма продаж \t\t\t\t{sell}", style='List Bullet')
+doc.add_paragraph(f"Чистая прибыль \t\t\t\t\t{sell - ras}", style='List Bullet')
+a = '\n\n\n\n\n\n\n'
+paragraph = doc.add_paragraph(a)
+paragraph.style = doc.styles['Normal']
+
 agents_s = {}
 
-for agent, price, buy, kg in zip(df1["Агент"][:3857], df1["Сумма в ценах закупки"][:3857], df1["Сумма в ценах продажи"][:3857], df1["Продажи в кг"][:3857]):
+for agent, price, buy, kg in zip(df1["Агент"][3857:], df1["Сумма в ценах закупки"][3857:], df1["Сумма в ценах продажи"][3857:], df1["Продажи в кг"][3857:]):
     if agent not in agents_s:
         agents_s[agent] = [price, buy, kg]
     else:
@@ -70,35 +105,40 @@ for price in df1["Сумма в ценах закупки"][:3857]:
 all_sell = 0
 for price in df1["Сумма в ценах продажи"][:3857]:
     all_sell += float(price)
-print(all_buy, all_sell)
 
+doc.add_heading("Отчёт об агентах за 2015 - 2016", 0)
 for i in range(len(list(agents_f.items()))):
-    print("2015 - 2016\tЧистая прибыль за кг от " + list(agents_s.items())[i][0].upper() + "\t\t" + str(int((list(agents_s.items())[i][1][1] - list(agents_s.items())[i][1][0]) / list(agents_s.items())[i][1][2])))
-    print("\t\tЗакупка агента:\t\t" + str(int(list(agents_s.items())[i][1][0])) + "\tот общего V\t\t" + str(round(list(agents_s.items())[i][1][0] / all_buy * 100, 2)) + '%')
-    print("\t\tПрибыль агента:\t\t" + str(int(list(agents_s.items())[i][1][1])) + "\tот общего V\t\t" + str(round(list(agents_s.items())[i][1][1] / all_sell * 100, 2)) + '%')
+    dohod = int((list(agents_f.items())[i][1][1] - list(agents_f.items())[i][1][0]))
+    a = "2015 - 2016 Чистая прибыль за кг от   " + list(agents_f.items())[i][0].upper().ljust(20, ' ') + str(int((list(agents_f.items())[i][1][1] - list(agents_f.items())[i][1][0]) / list(agents_f.items())[i][1][2])).rjust(5, ' ') + '%'
+    b = "\t\tЗакупка агента:\t\t" + str(int(list(agents_f.items())[i][1][0])).rjust(8, ' ') + "\tот общего V\t" + str(round(list(agents_f.items())[i][1][0] / all_buy * 100, 2)) + '%'
+    c = "\t\tПрибыль агента:\t\t" + str(int(list(agents_f.items())[i][1][1])).rjust(8, ' ') + "\tот общего V\t" + str(round(list(agents_f.items())[i][1][1] / all_sell * 100, 2)) + '%'
+    d = "\t\tЧистый доход:\t\t" + str(dohod).rjust(8, ' ') + "\tот общего V\t" + str(round(dohod / (all_sell - all_buy) * 100, 2)) + '%'
+    doc.add_heading(f"{a}", 1)
+    doc.add_paragraph(f"{b}", style='Normal')
+    doc.add_paragraph(f"{c}", style='Normal')
+    doc.add_paragraph(f"{d}", style='Normal')
+a = '\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n'
+paragraph = doc.add_paragraph(a)
+paragraph.style = doc.styles['Normal']
+
+doc.add_heading("Отчёт об агентах за 2016 - 2017", 0)
+for i in range(len(list(agents_s.items()))):
     dohod = int((list(agents_s.items())[i][1][1] - list(agents_s.items())[i][1][0]))
-    print("\t\tЧистый доход:\t\t" + str(dohod) + "\tот общего V\t\t" + str(round(dohod / (all_sell - all_buy) * 100, 2)) + '%')
-    print()
-
-
-for i in things_2.items():
-    a = str()
-    for j in range(len(i[1])):
-        if j == 0:
-            a += "количество " + str(i[1][j])
-        elif j == 1:
-            a += "; кг " + str(i[1][j])
-        elif j == 2:
-            a += "; сумма покупок " + str(int(i[1][j]))
-        elif j == 3:
-            a += "; суииа продаж " + str(int(i[1][j]))
-            a += "; чистая прибль товара " + str(int(i[1][j] - i[1][j - 1]))
-    print(a)
-
-print()
+    a = "2015 - 2016 Чистая прибыль за кг от   " + list(agents_s.items())[i][0].upper().ljust(20, ' ') + str(int(
+        (list(agents_s.items())[i][1][1] - list(agents_s.items())[i][1][0]) / list(agents_s.items())[i][1][2])).rjust(5,' ') + '%'
+    b = "\t\tЗакупка агента:\t\t" + str(int(list(agents_s.items())[i][1][0])).rjust(8, ' ') + "\tот общего V\t" + str(
+        round(list(agents_s.items())[i][1][0] / all_buy * 100, 2)) + '%'
+    c = "\t\tПрибыль агента:\t\t" + str(int(list(agents_s.items())[i][1][1])).rjust(8, ' ') + "\tот общего V\t" + str(
+        round(list(agents_s.items())[i][1][1] / all_sell * 100, 2)) + '%'
+    d = "\t\tЧистый доход:\t\t" + str(dohod).rjust(8, ' ') + "\tот общего V\t" + str(
+        round(dohod / (all_sell - all_buy) * 100, 2)) + '%'
+    doc.add_heading(f"{a}", 1)
+    doc.add_paragraph(f"{b}", style='Normal')
+    doc.add_paragraph(f"{c}", style='Normal')
+    doc.add_paragraph(f"{d}", style='Normal')
 
 statik_first = {}
-for date, count, money in zip(df1["Дата"][:3857], df1["Продажи в кг"][:3857], df1["Сумма в ценах продажи"][:3857]):
+for date, count, money in zip(df1["Дата"][:2470], df1["Продажи в кг"][:2470], df1["Сумма в ценах продажи"][:2470]):
     if date not in statik_first:
         statik_first[date] = [count, money]
     else:
@@ -126,19 +166,40 @@ for i in sorted(zip(statik_second.keys(), list(statik_second.values())), key=lam
     summa_kg_2.append(i[1][0])
     summa_2.append(i[1][1])
 
-print("Изменения продажи товаров (в кг) составил:  \t" + str(int((sum(summa_kg_2) - sum(summa_kg_1)) / sum(summa_kg_1) * 10000) / 100) + "%  \tс 2015 по 2016")
-print("Изменения продажи выручки товаров составил: \t" + str(int((sum(summa_2)- sum(summa_1)) / sum(summa_1) * 10000) / 100) + "%  \tс 2015 по 2016")
-print()
+doc.add_heading("Изменения 2015 (1 и 2)  2016 (1 и 2)", 0)
+a = "Изменения продажи товаров (в кг) составил:    \t\t" + str(int((sum(summa_kg_2) - sum(summa_kg_1)) / sum(summa_kg_1) * 10000) / 100) + "%"
+b = "Изменения выручки с продажи товаров составил: \t" + str(int((sum(summa_2)- sum(summa_1)) / sum(summa_1) * 10000) / 100) + "%"
+doc.add_paragraph(f"{a}", style='Normal')
+doc.add_paragraph(f"{b}", style='Normal')
+a = '\n'
+paragraph = doc.add_paragraph(a)
+paragraph.style = doc.styles['Normal']
+
 for i in range(3):
     f = list(things.values())[i][3] / list(things.values())[i][1]
     s = list(things_2.values())[i][3] / list(things_2.values())[i][1]
-    print("Изменения цен товара " + str(list(things_2.keys())[i]) + " за кг составили: \t" + str(int((s - f) / f * 10000) / 100) + "%  \tс 2015 по 2016")
-print()
+    a = "Изменения цен товара " + str(list(things_2.keys())[i]) + " за кг составили: \t" + str(int((s - f) / f * 10000) / 100) + "%"
+    doc.add_paragraph(f"{a}", style='Normal')
 
+a = '\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n'
+paragraph = doc.add_paragraph(a)
+paragraph.style = doc.styles['Normal']
+a = '\n'
+paragraph = doc.add_paragraph(a)
+paragraph.style = doc.styles['Normal']
+doc.add_heading('Анализ', 0)
 for i in range(3):
+    doc.add_heading('Товар с маркером ' + str(list(things_2.keys())[i]), 1)
+    doc.add_heading('Анализ 2015(1 и 2) : 2016(1 и 2) ', 2)
     f = list(things.values())[i][3] - list(things.values())[i][2]
     s = list(things_2.values())[i][3] - list(things_2.values())[i][2]
-    print("Изменения прибыли товара " + str(list(things_2.keys())[i]) + " составили: \t\t" + str(int((s - f) / f * 10000) / 100) + "%  \tс 2015 по 2016")
+    a = "Изменения прибыли товара 2015(1 и 2) : 2016(1 и 2) составили: \t" + str(int((s - f) / f * 10000) / 100) + "%"
+    doc.add_paragraph(f"{a}", style='Normal')
+    f = list(things.values())[i][1]
+    s = list(things_2.values())[i][1]
+    a = "Изменения спроса на товар 2015(1 и 2) : 2016(1 и 2) составили: \t" + str(int((s - f) / f * 10000) / 100) + "%"
+    doc.add_paragraph(f"{a}", style='Normal')
+    doc.add_heading('Прогноз на 2017(1 и 2) ', 2)
     if f < s:
         f_p = list(things.values())[i][3] / list(things.values())[i][1]
         s_p = list(things_2.values())[i][3] / list(things_2.values())[i][1]
@@ -152,10 +213,12 @@ for i in range(3):
         k_kg = round((s_kg - f_kg) / f_kg * 100 / 2, 2)
         k_buy = round((s_buy - f_buy) / f_buy * 100 / 2, 2)
 
-        print("Рекомендуемая цена на следующий год: \t\t\t" + str(round(s_p + (s_p-f_p) / f_p / 2 * 100, 2)) + '\t\tс 2016 по 2017')
-        print("Примерная доход: \t\t\t\t\t\t\t\t" + str(int(s_buy + s_buy * (k_buy / 100))) + '\t\tс 2016 по 2017')
-        print("Примерный объём закупок: \t\t\t\t\t\t" + str(int(s_kg + s_kg * (k_kg / 100)))+ '\t\tс 2016 по 2017')
-        print()
+        b = "Рекомендуемая цена на 2017(1 и 2):  ".ljust(50) + '\t\t' + str(round(s_p + (s_p-f_p) / f_p / 2 * 100, 2))
+        c = "Прогнозируемый доход 2017(1 и 2):   ".ljust(50) + '\t\t' + str(int(s_buy + s_buy * (k_buy / 100)))
+        d = "Примерный объём закупок 2017(1 и 2):".ljust(50) + '\t\t' + str(int(s_kg + s_kg * (k_kg / 100)))
+        doc.add_paragraph(f"{b}", style='Normal')
+        doc.add_paragraph(f"{c}", style='Normal')
+        doc.add_paragraph(f"{d}", style='Normal')
 
     elif f >= s:
         f_p = list(things.values())[i][3] / list(things.values())[i][1]
@@ -170,19 +233,14 @@ for i in range(3):
         k_kg = abs(round((s_kg - f_kg) / f_kg * 100, 2))
         k_buy = abs(round((s_buy - f_buy) / f_buy * 100, 2))
 
-        print("Рекомендуемая цена на следующий год: \t\t\t" + str(round(s_p - (s_p - f_p) / f_p * 100, 2)) + '\t\tс 2017 по 2018')
-        print("Примерная доход: \t\t\t\t\t\t\t\t" + str(int(s_buy + s_buy * (k_buy / 100))) + '\t\tс 2017 по 2018')
-        print("Примерный объём закупок: \t\t\t\t\t\t" + str(int(s_kg + s_kg * (k_kg / 100))) + '\t\tс 2017 по 2018')
-        print()
-print()
+        b = "Рекомендуемая цена на 2017(1 и 2):  ".ljust(50) + '\t\t' + str(round(s_p - (s_p - f_p) / f_p * 100, 2))
+        c = "Прогнозируемый доход 2017(1 и 2):   ".ljust(50) + '\t\t' + str(int(s_buy + s_buy * (k_buy / 100)))
+        d = "Примерный объём закупок 2017(1 и 2):".ljust(50) + '\t\t' + str(int(s_kg + s_kg * (k_kg / 100)))
+        doc.add_paragraph(f"{b}", style='Normal')
+        doc.add_paragraph(f"{c}", style='Normal')
+        doc.add_paragraph(f"{d}", style='Normal')
 
-for i in range(3):
-    f = list(things.values())[i][1]
-    s = list(things_2.values())[i][1]
-    print("Изменения спроса на товар " + str(list(things_2.keys())[i]) + " составили: \t\t" + str(int((s - f) / f * 10000) / 100) + "%   \tс 2015 по 2016")
-print()
-
-print('Изменения спроса при рекомендуемых параметрах')
+doc.add_heading('Изменения спроса при рекомендуемых параметрах', 0)
 for i in range(3):
     f_p = list(things.values())[i][3] / list(things.values())[i][1]
     s_p = list(things_2.values())[i][3] / list(things_2.values())[i][1]
@@ -195,36 +253,65 @@ for i in range(3):
 
     k_kg = abs(round((s_kg - f_kg) / f_kg * 100 / 2, 2))
     k_buy = abs(round((s_buy - f_buy) / f_buy * 100, 2))
-    print("Товар " + str(list(things_2.keys())[i]) + " составят: \t\t" + str(k_kg) + "%   \tс 2017 по 2018")
+    a = "На товар " + str(list(things_2.keys())[i]) + " составят: \t\t" + str(k_kg) + "%   \tна 2017(1, 2)"
+    doc.add_paragraph(f"{a}", style='Normal')
 
-df = pd.DataFrame({'Месяц': [1, 2, 3],
-                    'Код товара': [list(things.keys())[0], list(things.keys())[1], list(things.keys())[2]],
-                    'Продажи в 2015': [list(things.values())[0][0], list(things.values())[1][0], list(things.values())[2][0]],
-                    'Продажи в 2016': [list(things_2.values())[0][0], list(things_2.values())[1][0], list(things_2.values())[2][0]]})
+# ------------------------------------------------Excel--------------------------------------------------------------
 
-workbook = xlsxwriter.Workbook('диаграммы.xlsx')
+ex = {}
+for i in range(3):
+    f_p = list(things.values())[i][3] / list(things.values())[i][1]
+    s_p = list(things_2.values())[i][3] / list(things_2.values())[i][1]
+
+    f_kg = list(things.values())[i][1]
+    s_kg = list(things_2.values())[i][1]
+
+    f_buy = list(things.values())[i][3]
+    s_buy = list(things_2.values())[i][3]
+
+    k_kg = abs(round((s_kg - f_kg) / f_kg * 100 / 2, 2))
+    k_buy = abs(round((s_buy - f_buy) / f_buy * 100 / 2, 2))
+    ex[list(things_2.keys())[i]] = [round(s_p + (s_p - f_p) / f_p / 2 * 100, 2), int(s_buy + s_buy * (k_buy / 100)), int(s_kg + s_kg * (k_kg / 100))]
+
+workbook = xlsxwriter.Workbook('Агенты.xlsx')
 worksheet = workbook.add_worksheet()
-
-# Данные
-data = [list(things.values())[0][0], list(things.values())[1][0], list(things.values())[2][0]]
-worksheet.write_column('A1', data)
-
-# Тип диаграммы
-chart = workbook.add_chart({'type': 'pie'})
-
-# Строим по нашим данным
-chart.add_series({'values': '=Sheet1!A1:A3'})
-chart.add_series({'categories': "=Sheet1!A1:A3",
-                  'values': "=Sheet1!A1:A3",
-                  'name': 'Продажи'})
-worksheet.insert_chart('B2 x M2', chart)
+for i, j in enumerate([16, 25, 26, 15]):
+    worksheet.set_column(i, i, j)
+columns = [{'header': 'Агент'}, {'header': "Сумма в ценах закупки"},
+           {'header': "Сумма в ценах продажи"}, {'header': "Продажи в кг"}]
+data1 = [[a, *i] for a, i in agents_f.items()]
+worksheet.write(0, 0, 'Статистика по агентам за первый год(1 и 2 месяц):')
+worksheet.add_table(1, 0, len(data1) + 1, 3, {'data': data1, 'columns': columns})
+data2 = [[a, *i] for a, i in agents_s.items()]
+worksheet.write(len(data1) + 2, 0, 'Статистика по агентам за второй год(1 и 2 месяц):')
+worksheet.add_table(len(data1) + 3, 0, len(data2) + len(data1) + 3, 3, {'data': data2, 'columns': columns})
 workbook.close()
 
-df.to_excel('./teams.xlsx')
-df.head()
-# os.startfile(r'teams.xlsx')
-'''
-plt.style.use('dark_background')  # чёерный фон
-plt.plot(date, summa)
-plt.show()
-'''
+workbook = xlsxwriter.Workbook('Объемы.xlsx')
+worksheet = workbook.add_worksheet()
+for i, j in enumerate([13, 24, 25, 33, 26, 16]):
+    worksheet.set_column(i, i, j)
+columns = [{'header': 'Код товара'}, {'header': 'Количество покупок'}, {'header': "Продажи в кг"},
+           {'header': "Сумма в ценах закупки"}, {'header': "Сумма в ценах продажи"}, {'header': "Чистая прибль"}]
+data1 = [[a, *i] for a, i in things.items()]
+for i in range(len(data1)):
+    data1[i].append(data1[i][4] - data1[i][3])
+worksheet.write(0, 0, 'Обьемы продаж за первый год:')
+worksheet.add_table(1, 0, len(data1) + 1, 5, {'data': data1, 'columns': columns})
+data2 = [[a, *i] for a, i in things_2.items()]
+for i in range(len(data2)):
+    data2[i].append(data2[i][4] - data2[i][3])
+worksheet.write(len(data1) + 2, 0, 'Обьемы продаж за второй год:')
+worksheet.add_table(len(data1) + 3, 0, len(data2) + len(data1) + 3, 5, {'data': data2, 'columns': columns})
+columns = [{'header': 'Код товара'}, {'header': "Рекомендуемая цена"},
+           {'header': "Сумма в ценах продажи"}, {'header': "Примерный объём закупок в кг"}]
+data = [[a, *i] for a, i in ex.items()]
+worksheet.write(len(data2) + len(data1) + 4, 0, 'Прогноз:')
+worksheet.add_table(len(data2) + len(data1) + 5, 0, len(data) + len(data2) + len(data1) + 5, 3, {'data': data, 'columns': columns})
+# chart = workbook.add_chart({'type': 'line'}) не работает
+# chart.add_series({'values': '=(Sheet1!C3;Sheet1!C8;Sheet1!D13)'})
+# chart.add_series({'values': '=(Sheet1!C4;Sheet1!C9;Sheet1!D14)'})
+# chart.add_series({'values': '=(Sheet1!C5;Sheet1!C10;Sheet1!D15)'})
+# worksheet.insert_chart('A17', chart)
+workbook.close()
+doc.save('Отчет.docx')
