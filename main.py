@@ -308,10 +308,15 @@ columns = [{'header': 'Код товара'}, {'header': "Рекомендуем
 data = [[a, *i] for a, i in ex.items()]
 worksheet.write(len(data2) + len(data1) + 4, 0, 'Прогноз:')
 worksheet.add_table(len(data2) + len(data1) + 5, 0, len(data) + len(data2) + len(data1) + 5, 3, {'data': data, 'columns': columns})
-# chart = workbook.add_chart({'type': 'line'}) не работает
-# chart.add_series({'values': '=(Sheet1!C3;Sheet1!C8;Sheet1!D13)'})
-# chart.add_series({'values': '=(Sheet1!C4;Sheet1!C9;Sheet1!D14)'})
-# chart.add_series({'values': '=(Sheet1!C5;Sheet1!C10;Sheet1!D15)'})
-# worksheet.insert_chart('A17', chart)
+for i in range(3):
+    worksheet.write(16 + i, 0, f'=Sheet1!$C${i + 3}')
+    worksheet.write(16 + i, 1, f'=Sheet1!$C${i + 8}')
+    worksheet.write(16 + i, 2, f'=Sheet1!$D${i + 13}')
+chart = workbook.add_chart({'type': 'line'})
+chart.add_series({'categories': '={"Первый";"Второй";"Прогноз"}', 'name': f'{list(things.keys())[0]}', 'values': '=Sheet1!$A$17:$C$17'})
+chart.add_series({'name': f'{list(things.keys())[1]}', 'values': '=Sheet1!$A$18:$C$18'})
+chart.add_series({'name': f'{list(things.keys())[2]}', 'values': '=Sheet1!$A$19:$C$19'})
+chart.set_title({'name': 'Статистика по продажам кг'})
+worksheet.insert_chart('A17', chart)
 workbook.close()
 doc.save('Отчет.docx')
